@@ -1,0 +1,27 @@
+name: Auto Publish
+
+on:
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v3
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+
+      - name: Run Script
+        env:
+            PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+            ZULIP_API_KEY: ${{ secrets.ZULIP_API_KEY }}
+            ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
+            ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
+            ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
+        run : |
+          python ${{ github.workspace }}/main.py
