@@ -141,20 +141,6 @@ def merge_docs_pull_request() -> bool:
     return True
 
 
-def add_update_log_to_discord_queue(message: str) -> bool:
-    url = "https://bot-webhook.snapgenshin.cn/private"
-    data = {
-        "type": "add_discord_message",
-        "data": {
-            "message": message
-        }
-    }
-    response = httpx.post(url, json=data)
-    print(response.status_code)
-    print(response.text)
-    return True
-
-
 def create_release_and_upload_asset(tag_name: str, release_content: str) -> bool:
     repo_name = "DGP-Studio/Snap.Hutao"
     url = f"https://api.github.com/repos/{repo_name}/releases"
@@ -211,7 +197,6 @@ def main():
         message += f"{k} message:\n\n```\n{v}\n```\n\n"
     send_zulip_message(message)
     merge_docs_pull_request()
-    add_update_log_to_discord_queue(changelog_set["social"])
     create_release_and_upload_asset(check_result[2], changelog_set["generic"])
 
 
