@@ -75,8 +75,7 @@ def get_update_logs(expected_version: str) -> (str, str):
 
 def generate_changelog(en_log: str, zh_log: str, new_version: str):
     github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
-    generic_changelog = f"""
-## 更新日志
+    generic_changelog = f"""## 更新日志
     
 {zh_log}
     
@@ -149,7 +148,7 @@ def create_release_and_upload_asset(tag_name: str, release_content: str) -> bool
         "target_commitish": "main",
         "name": tag_name,
         "body": release_content,
-        "draft": True,
+        "draft": False,
         "prerelease": False,
         "make_latest": "true"
     }
@@ -168,18 +167,17 @@ def create_release_and_upload_asset(tag_name: str, release_content: str) -> bool
         print("Not Found if the discussion category name is invalid")
         return False
     else:
-        print(f"Unknown error: {response.status_code}")
+        print(f"Unknown error: {response.status_code}, {response.text}")
         return False
     release_id = response.json()["id"]
     upload_url = response.json()["upload_url"]
     print(f"Release id: {release_id}")
     url = upload_url.replace("{?name,label}", f"?name=Snap.Hutao.{tag_name}.msix")
     print(f"Upload url: {url}")
-    mimetypes = "application/msix"
+    mimetypes = "application/ctet-stream"
     headers["Content-Type"] = mimetypes
-    with open(f"./cache/Snap.Hutao.{tag_name}.msix", "rb") as f:
-        data = f.read()
-    response = httpx.post(url, content=data, headers=headers)
+    files = {"upload_file": open(f"./cache/Snap.Hutao.{tag_name}.msix", "rb")}
+    response = httpx.post(url, files=files, headers=headers)
     print(f"Upload status code: {response.status_code}")
 
 
