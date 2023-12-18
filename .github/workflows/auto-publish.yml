@@ -2,6 +2,8 @@ name: Auto Publish
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [release]
   
 jobs:
   build:
@@ -18,10 +20,13 @@ jobs:
 
       - name: Run Script
         env:
-            PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
-            ZULIP_API_KEY: ${{ secrets.ZULIP_API_KEY }}
-            ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
-            ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
-            ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
+          SIGNPATH_TOKEN: ${{ secrets.SIGNPATH_TOKEN }}
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          ZULIP_API_KEY: ${{ secrets.ZULIP_API_KEY }}
+          ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
+          ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
+          ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
+          VERSION: ${{ github.event.client_payload.version }}
+          DOWNLOAD_LINK: ${{ github.event.client_payload.download_link }}
         run : |
           python ${{ github.workspace }}/main.py
