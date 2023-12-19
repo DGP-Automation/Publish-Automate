@@ -128,7 +128,7 @@ def main():
     for k, v in changelog_set.items():
         message += f"{k} message:\n\n```\n{v}\n```\n\n"
     send_zulip_message(message)
-    merge_docs_pull_request()
+    # merge_docs_pull_request()
     os.putenv("GITHUB_OUTPUT", f"changelog={changelog_set['generic']}")
 
 
