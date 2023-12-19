@@ -1,46 +1,28 @@
 import json
 import httpx
-import re
 import os
-from bs4 import BeautifulSoup
-from utils import download_stream_file, send_zulip_message
+
+from utils import send_zulip_message
 
 PAT_TOKEN = os.getenv("PAT_TOKEN")
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/DGP-Studio/Snap.Hutao/releases/latest"
-MS_STORE_RELEASE_API = "https://store.rg-adguard.net/api/GetFiles"
-MS_STORE_RELEASE_API_PARAMS = {
-    "type": "ProductId",
-    "url": "9PH4NXJ2JN52",
-    "ring": "RP",
-    "lang": "en-US"
-}
-FILE_NAME_REGEX = r"^60568DGPStudio\.SnapHutao_(?P<v>\d\.\d+\.\d+)\.0_x64__\w+\.msix"
+
+new_version = os.getenv("VERSION")
+
+github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
+msix_file_name = f"Snap.Hutao.{new_version}.msix"
 
 
-def has_newer_version() -> (bool, str, str):
-    github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
-    ms_meta_soup = BeautifulSoup(httpx.post(MS_STORE_RELEASE_API, data=MS_STORE_RELEASE_API_PARAMS).text,
-                                 "html.parser")
-    ms_version = ms_meta_soup.find("a", string=re.compile(FILE_NAME_REGEX))
-    ms_url = ms_version["href"]
-    ms_version = re.search(FILE_NAME_REGEX, ms_version.text).group("v")
-    github_version = [int(i) for i in github_version.split(".")]
-    ms_version = [int(i) for i in ms_version.split(".")]
+def get_update_logs() -> (str, str):
+    pr_url = f"https://api.github.com/repos/DGP-Studio/Snap.Hutao.Docs/pulls?state=open"
 
-    if ms_version > github_version:
-        print("New version detected")
-        print(f"Current GitHub version: {github_version}")
-        print(f"Current MS version: {ms_version}")
-        return True, ms_url, ".".join([str(i) for i in ms_version])
-    else:
-        print("No new version detected")
-    return False, None, None
+    def check_label(item):
+        labels = item["labels"]
+        return len(list(filter(lambda label: label["name"] == "Document Updates", labels))) != 0
 
+    response = list(filter(check_label, httpx.get(pr_url).json()))
 
-def get_update_logs(expected_version: str) -> (str, str):
-    pr_url = f"https://api.github.com/repos/DGP-Studio/Snap.Hutao.Docs/pulls?state=open&labels=Document%20Updates"
-    response = httpx.get(pr_url).json()
     if len(response) == 0:
         print("No open PR with 'Document Updates' label.")
         return None
@@ -50,8 +32,8 @@ def get_update_logs(expected_version: str) -> (str, str):
     pr = response[0]
     pr_title = pr["title"]
     ref_name = pr["head"]["ref"]
-    if pr_title != f"Update to {expected_version}":
-        print(f"Expected PR title: 'Update to {expected_version}'")
+    if pr_title != f"Update to {new_version}":
+        print(f"Expected PR title: 'Update to {new_version}'")
         return None
     else:
         print(f"Found PR with 'Document Updates' label: {pr_title}, id: {pr['number']}")
@@ -73,8 +55,7 @@ def get_update_logs(expected_version: str) -> (str, str):
     return en_update_log, zh_update_log
 
 
-def generate_changelog(en_log: str, zh_log: str, new_version: str):
-    github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
+def generate_changelog(en_log: str, zh_log: str):
     generic_changelog = f"""## 更新日志
     
 {zh_log}
@@ -94,7 +75,7 @@ Full Changelog: [{github_version}...{new_version}](https://github.com/DGP-Studio
 {new_version} 版本已发布于微软商店/ Version {new_version} is released on Microsoft Store
 
 Release Page: https://github.com/DGP-Studio/Snap.Hutao/releases/tag/{new_version}
-Direct Download: https://github.com/DGP-Studio/Snap.Hutao/releases/download/{new_version}/Snap.Hutao.{new_version}.msix   
+Direct Download: https://github.com/DGP-Studio/Snap.Hutao/releases/download/{new_version}/{msix_file_name}   
 """
     social_promotion = social_promotion + "\n" + generic_changelog
     ann_meta = {
@@ -140,62 +121,15 @@ def merge_docs_pull_request() -> bool:
     return True
 
 
-def create_release_and_upload_asset(tag_name: str, release_content: str) -> bool:
-    repo_name = "DGP-Studio/Snap.Hutao"
-    url = f"https://api.github.com/repos/{repo_name}/releases"
-    post_body = {
-        "tag_name": tag_name,
-        "target_commitish": "main",
-        "name": tag_name,
-        "body": release_content,
-        "draft": False,
-        "prerelease": False,
-        "make_latest": "true"
-    }
-    headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {PAT_TOKEN}",
-        "X-GitHub-Api-Version": "2022-11-28"
-    }
-    response = httpx.post(url, json=post_body, headers=headers)
-    if response.status_code == 201:
-        print("Release created")
-    elif response.status_code == 422:
-        print("Validation failed, or the endpoint has been spammed.")
-        return False
-    elif response.status_code == 404:
-        print("Not Found if the discussion category name is invalid")
-        return False
-    else:
-        print(f"Unknown error: {response.status_code}, {response.text}")
-        return False
-    release_id = response.json()["id"]
-    upload_url = response.json()["upload_url"]
-    print(f"Release id: {release_id}")
-    url = upload_url.replace("{?name,label}", f"?name=Snap.Hutao.{tag_name}.msix")
-    print(f"Upload url: {url}")
-    mimetypes = "application/ctet-stream"
-    headers["Content-Type"] = mimetypes
-    files = {"upload_file": open(f"./cache/Snap.Hutao.{tag_name}.msix", "rb")}
-    response = httpx.post(url, files=files, headers=headers)
-    print(f"Upload status code: {response.status_code}")
-
-
 def main():
-    check_result = has_newer_version()
-    if not check_result[0]:
-        return False
-    print(f"Downloading Snap.Hutao.{check_result[2]}.msix")
-    download_stream_file(check_result[1], f"Snap.Hutao.{check_result[2]}.msix")
-    print("Downloading update logs")
-    en_log, zh_log = get_update_logs(check_result[2])
-    changelog_set = generate_changelog(en_log, zh_log, check_result[2])
-    message = f"{check_result[2]} version is released, please process the following information:\n\n"
+    en_log, zh_log = get_update_logs()
+    changelog_set = generate_changelog(en_log, zh_log)
+    message = f"{new_version} version is released, please process the following information:\n\n"
     for k, v in changelog_set.items():
         message += f"{k} message:\n\n```\n{v}\n```\n\n"
     send_zulip_message(message)
     merge_docs_pull_request()
-    create_release_and_upload_asset(check_result[2], changelog_set["generic"])
+    os.putenv("GITHUB_OUTPUT", f"changelog={changelog_set['generic']}")
 
 
 if __name__ == "__main__":
