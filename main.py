@@ -129,7 +129,8 @@ def main():
         message += f"{k} message:\n\n```\n{v}\n```\n\n"
     send_zulip_message(message)
     merge_docs_pull_request()
-    os.putenv("GITHUB_OUTPUT", f"changelog={changelog_set['generic']}")
+    with open("release_body.md", "w") as body:
+        body.writelines(changelog_set['generic'])
 
 
 if __name__ == "__main__":
