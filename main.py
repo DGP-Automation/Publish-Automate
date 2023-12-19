@@ -1,7 +1,7 @@
 import json
 import httpx
 import os
-from utils import download_stream_file, send_zulip_message, calculate_file_md5
+from utils import download_stream_file, send_zulip_message, calculate_file_sha512
 
 SIGNPATH_TOKEN = os.getenv("SIGNPATH_TOKEN")
 PAT_TOKEN = os.getenv("PAT_TOKEN")
@@ -14,15 +14,15 @@ new_version = os.getenv("VERSION")
 github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
 msix_file_name = f"Snap.Hutao.{new_version}.msix"
 msix_file_path = f"./cache/Snap.Hutao.{new_version}.msix"
-md5_file_name = "MD5SUM"
-md5_file_path = f"./cache/MD5SUM"
+sha512_file_name = "SHA512SUM"
+sha512_file_path = f"./cache/SHA512SUM"
 
 
 def generate_hash_file():
-    with open(md5_file_path, "w") as f:
-        md5 = calculate_file_md5(msix_file_path)
-        print(f"MD5: {md5}")
-        f.writelines(f"{md5} {msix_file_name}")
+    with open(sha512_file_path, "w") as f:
+        sha512 = calculate_file_sha512(msix_file_path)
+        print(f"SHA512: {sha512}")
+        f.writelines(f"{sha512} {msix_file_name}")
 
 
 def get_update_logs() -> (str, str):
@@ -175,7 +175,7 @@ def create_release_and_upload_asset(release_content: str) -> bool:
         print(f"Upload status code: {resp.status_code}")
 
     upload_asset(msix_file_name, msix_file_path)
-    upload_asset(md5_file_name, md5_file_path)
+    upload_asset(sha512_file_name, sha512_file_path)
 
 
 def main():

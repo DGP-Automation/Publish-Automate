@@ -3,11 +3,11 @@ import os
 import hashlib
 
 
-def calculate_file_md5(file_path):
-    md5 = hashlib.md5()
+def calculate_file_sha512(file_path):
+    sha512 = hashlib.sha512()
     with open(file_path, 'rb') as f:
-        md5.update(f.read())
-    return md5.hexdigest()
+        sha512.update(f.read())
+    return sha512.hexdigest()
 
 
 def download_stream_file(url, file_name, headers=None):
