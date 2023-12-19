@@ -2,26 +2,73 @@ name: Auto Publish
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [release]
   
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout repo content
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: setup python
+      - name: Setup Python 3.12
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-      - run: pip install -r requirements.txt
 
-      - name: Run Script
+      - name: Install deps
+        run: pip install httpx
+
+      - name: Download MSIX
+        run: |
+          wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}
+
+      - name: Generate SHA256 Checksums
+        run: sha256sum *.msix | awk '{print $1}' > SHA256SUMS
+
+      - name: Generate update logs
+        id: changelog
         env:
-            PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
-            ZULIP_API_KEY: ${{ secrets.ZULIP_API_KEY }}
-            ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
-            ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
-            ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
-        run : |
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          ZULIP_API_KEY: ${{ secrets.ZULIP_API_KEY }}
+          ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
+          ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
+          ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
           python ${{ github.workspace }}/main.py
+
+      - name: Create Github release
+        id: github_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          tag_name: ${{ github.event.client_payload.version }}
+          commitish: main
+          release_name: ${{ github.event.client_payload.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          prerelease: false
+          owner: DGP-Studio
+          repo: Snap.Hutao
+
+      - name: Upload MSIX to Github release
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          upload_url: ${{ steps.github_release.outputs.upload_url }}
+          asset_path: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          asset_name: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          asset_content_type: application/msix
+
+      - name: Upload SHA512SUMS to GitHub release
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          upload_url: ${{ steps.github_release.outputs.upload_url }}
+          asset_path: SHA256SUMS
+          asset_name: SHA256SUMS
+          asset_content_type: text/plain
