@@ -16,17 +16,57 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-      - run: pip install -r requirements.txt
 
-      - name: Run Script
+      - name: install deps
+        run: pip install httpx
+
+      - name: download msix
+        run: |
+          wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}'
+
+      - name: generate sha256 checksums
+        run: sha256sum *.msix > SHA256SUMS
+
+      - name: generate update logs
+        id: changelog
         env:
-          SIGNPATH_TOKEN: ${{ secrets.SIGNPATH_TOKEN }}
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           ZULIP_API_KEY: ${{ secrets.ZULIP_API_KEY }}
           ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
           ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
           ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
-          VERSION: ${{ github.event.client_payload.version }}
-          DOWNLOAD_LINK: ${{ github.event.client_payload.download_link }}
-        run : |
+        run: |
           python ${{ github.workspace }}/main.py
+
+      - name: Create Github release
+        id: github_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          tag_name: ${{ github.event.client_payload.version }}
+          release_name: ${{ github.event.client_payload.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          prerelease: false
+          owner: DGP-Studio
+          repo: Snap.Hutao.CI.Test # Snap.Hutao
+
+      - name: Upload msix to Github release
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          upload_url: ${{ steps.github_release.outputs.upload_url }}
+          asset_path: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          asset_name: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          asset_content_type: application/msix
+
+      - name: Upload SHA512SUMS to GitHub release
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          upload_url: ${{ steps.github_release.outputs.upload_url }}
+          asset_path: SHA256SUMS
+          asset_name: SHA256SUMS
+          asset_content_type: text/plain

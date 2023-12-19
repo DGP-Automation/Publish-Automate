@@ -1,28 +1,17 @@
 import json
 import httpx
 import os
-from utils import download_stream_file, send_zulip_message, calculate_file_sha512
 
-SIGNPATH_TOKEN = os.getenv("SIGNPATH_TOKEN")
+from utils import send_zulip_message
+
 PAT_TOKEN = os.getenv("PAT_TOKEN")
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/DGP-Studio/Snap.Hutao/releases/latest"
 
-download_link = os.getenv("DOWNLOAD_LINK")
 new_version = os.getenv("VERSION")
 
 github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
 msix_file_name = f"Snap.Hutao.{new_version}.msix"
-msix_file_path = f"./cache/Snap.Hutao.{new_version}.msix"
-sha512_file_name = "SHA512SUM"
-sha512_file_path = f"./cache/SHA512SUM"
-
-
-def generate_hash_file():
-    with open(sha512_file_path, "w") as f:
-        sha512 = calculate_file_sha512(msix_file_path)
-        print(f"SHA512: {sha512}")
-        f.writelines(f"{sha512} {msix_file_name}")
 
 
 def get_update_logs() -> (str, str):
@@ -132,57 +121,7 @@ def merge_docs_pull_request() -> bool:
     return True
 
 
-def create_release_and_upload_asset(release_content: str) -> bool:
-    repo_name = "DGP-Studio/Snap.Hutao"
-    url = f"https://api.github.com/repos/{repo_name}/releases"
-    post_body = {
-        "tag_name": new_version,
-        "target_commitish": "main",
-        "name": new_version,
-        "body": release_content,
-        "draft": False,
-        "prerelease": False,
-        "make_latest": "true"
-    }
-    headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {PAT_TOKEN}",
-        "X-GitHub-Api-Version": "2022-11-28"
-    }
-    response = httpx.post(url, json=post_body, headers=headers)
-    if response.status_code == 201:
-        print("Release created")
-    elif response.status_code == 422:
-        print("Validation failed, or the endpoint has been spammed.")
-        return False
-    elif response.status_code == 404:
-        print("Not Found if the discussion category name is invalid")
-        return False
-    else:
-        print(f"Unknown error: {response.status_code}, {response.text}")
-        return False
-    release_id = response.json()["id"]
-    upload_url = response.json()["upload_url"]
-    print(f"Release id: {release_id}")
-    print(f"Upload url: {upload_url}")
-
-    def upload_asset(name, path):
-        file_upload_url = upload_url.replace("{?name,label}", f"?name={name}")
-        mimetypes = "application/octet-stream"
-        headers["Content-Type"] = mimetypes
-        files = {"upload_file": open(path, "rb")}
-        resp = httpx.post(file_upload_url, files=files, headers=headers)
-        print(f"Upload status code: {resp.status_code}")
-
-    upload_asset(msix_file_name, msix_file_path)
-    upload_asset(sha512_file_name, sha512_file_path)
-
-
 def main():
-    print(f"Downloading {msix_file_name}")
-    download_stream_file(download_link, msix_file_name, {"Authorization": f"Bearer {SIGNPATH_TOKEN}"})
-    generate_hash_file()
-    print("Downloading update logs")
     en_log, zh_log = get_update_logs()
     changelog_set = generate_changelog(en_log, zh_log)
     message = f"{new_version} version is released, please process the following information:\n\n"
@@ -190,7 +129,7 @@ def main():
         message += f"{k} message:\n\n```\n{v}\n```\n\n"
     send_zulip_message(message)
     merge_docs_pull_request()
-    create_release_and_upload_asset(changelog_set["generic"])
+    os.putenv("GITHUB_OUTPUT", f"changelog={changelog_set['generic']}")
 
 
 if __name__ == "__main__":
