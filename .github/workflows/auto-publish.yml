@@ -22,7 +22,7 @@ jobs:
 
       - name: download msix
         run: |
-          wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}'
+          wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}
 
       - name: generate sha256 checksums
         run: sha256sum *.msix > SHA256SUMS
