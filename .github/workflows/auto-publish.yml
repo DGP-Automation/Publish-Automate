@@ -35,6 +35,7 @@ jobs:
           ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
           ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
           ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
+          VERSION: ${{ github.event.client_payload.version }}
         run: |
           python ${{ github.workspace }}/main.py
 
