@@ -16,7 +16,7 @@ msix_file_name = f"Snap.Hutao.{new_version}.msix"
 
 def fetch_github_issue_and_pr() -> dict:
     pr_url = "https://api.github.com/repos/DGP-Studio/Snap.Hutao.Docs/pulls?state=open"
-    issue_url = "https://api.github.com/repos/DGP-Studio/Snap.Hutao.Docs/issues?state=open&labels=Publish"
+    issue_url = "https://api.github.com/repos/DGP-Studio/Snap.Hutao/issues?state=open&labels=Publish"
 
     def check_label(item):
         labels = item["labels"]
