@@ -8,7 +8,7 @@ PAT_TOKEN = os.getenv("PAT_TOKEN")
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/DGP-Studio/Snap.Hutao/releases/latest"
 
-new_version = os.getenv("VERSION")[:-2]
+new_version = os.getenv("VERSION")
 
 github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
 msix_file_name = f"Snap.Hutao.{new_version}.msix"
