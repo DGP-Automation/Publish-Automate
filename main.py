@@ -81,11 +81,15 @@ def generate_changelog(en_log: str, zh_log: str):
     
 Full Changelog: [{github_version}...{new_version}](https://github.com/DGP-Studio/Snap.Hutao/compare/{github_version}.\
 ..{new_version})
+
+---
+如果你安装过程中出现问题，请阅读我们的 [FAQ 文档](https://hut.ao/zh/advanced/FAQ.html)以获取解决方案
+If you have any issue during the installation, please check our [FAQ document](https://hut.ao/en/advanced/FAQ.html) for solutions
 """
     generic_changelog = generic_changelog.replace("\n\n\n", "\n")
     generic_changelog = generic_changelog.replace("\n\n", "\n")
     social_promotion = f"""
-{new_version} 版本已发布于微软商店/ Version {new_version} is released on Microsoft Store
+{new_version} 版本已发布/ Version {new_version} is released
 
 Release Page: https://github.com/DGP-Studio/Snap.Hutao/releases/tag/{new_version}
 Direct Download: https://github.com/DGP-Studio/Snap.Hutao/releases/download/{new_version}/{msix_file_name}   
@@ -93,8 +97,8 @@ Direct Download: https://github.com/DGP-Studio/Snap.Hutao/releases/download/{new
     social_promotion = social_promotion + "\n" + generic_changelog
     ann_meta = {
         "title": f"{new_version} 版本已发布/Version {new_version} is Live",
-        "description": f"{new_version} 版本已发布于微软商店，请及时更新，点击查看详情可阅读完整更新日志\nVersion {new_version} is released on "
-                       f"Microsoft Store, please update as soon as possible. Click to view details to read the full "
+        "description": f"{new_version} 版本已发布，请及时更新，点击查看详情可阅读完整更新日志\nVersion {new_version} is released"
+                       f", please update as soon as possible. Click to view details to read the full "
                        f"changelog",
         "url": f"https://github.com/DGP-Studio/Snap.Hutao/releases/tag/{new_version}"
     }
