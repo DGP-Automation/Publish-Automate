@@ -20,12 +20,6 @@ jobs:
       - name: Install deps
         run: pip install httpx
 
-      - name: Get PAT Token
-        run: |
-          token=`curl -X GET '${{ secrets.PAT_URL }}' --header 'token: ${{ secrets.GENERIC_TOKEN }}' | jq .pat`
-          echo "PAT_TOKEN=${token}" >> "$GITHUB_ENV"
-          echo "GITHUB_TOKEN=${token}" >> "$GITHUB_ENV"
-
       - name: Download MSIX
         run: |
           wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}
@@ -35,6 +29,11 @@ jobs:
 
       - name: Generate update logs
         env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          ZULIP_API_KEY: ${{ secrets.ZULIP_API_KEY }}
+          ZULIP_EMAIL: ${{ secrets.ZULIP_EMAIL }}
+          ZULIP_STREAM: ${{ secrets.ZULIP_STREAM }}
+          ZULIP_TOPIC: ${{ secrets.ZULIP_TOPIC }}
           VERSION: ${{ github.event.client_payload.version }}
         run: |
           python ${{ github.workspace }}/main.py
@@ -42,6 +41,8 @@ jobs:
       - name: Create Github release
         id: github_release
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         with:
           tag_name: ${{ github.event.client_payload.version }}
           target_commitish: main

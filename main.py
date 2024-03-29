@@ -2,6 +2,8 @@ import json
 import httpx
 import os
 
+from utils import send_zulip_message
+
 PAT_TOKEN = os.getenv("PAT_TOKEN")
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/DGP-Studio/Snap.Hutao/releases/latest"
@@ -125,6 +127,10 @@ def main():
     pr = fetch_github_issue_and_pr()
     en_log, zh_log = get_update_logs(pr)
     changelog_set = generate_changelog(en_log, zh_log)
+    message = f"{new_version} version is released, please process the following information:\n\n"
+    for k, v in changelog_set.items():
+        message += f"{k} message:\n\n```\n{v}\n```\n\n"
+    send_zulip_message(message)
     merge_docs_pull_request(pr)
     with open("release_body.md", "w") as body:
         body.writelines(changelog_set['generic'])
