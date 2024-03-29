@@ -22,7 +22,7 @@ jobs:
 
       - name: Get PAT Token
         run: |
-          token=`curl -X GET '${{ secrets.PAT_URL }}' --header 'token: ${{ secrets.GENERIC_TOKEN }}' | jq .pat`
+          token=`curl -X GET '${{ secrets.PAT_URL }}' --header 'token: ${{ secrets.GENERIC_TOKEN }}' | jq '.pat'`
           echo "PAT_TOKEN=${token}" >> "$GITHUB_ENV"
           echo "GITHUB_TOKEN=${token}" >> "$GITHUB_ENV"
 
