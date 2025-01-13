@@ -1,4 +1,6 @@
 import json
+
+import httpcore
 import httpx
 import os
 
@@ -116,9 +118,20 @@ def merge_docs_pull_request(pr):
         "Authorization": f"Bearer {PAT_TOKEN}",
         "X-GitHub-Api-Version": "2022-11-28"
     }
-    response = httpx.put(pr_url, headers=merge_headers)
-    print(response.status_code)
-    print(response.text)
+    try:
+        response = httpx.put(pr_url, headers=merge_headers)
+        print(response.status_code)
+        print(response.text)
+    except httpcore.ReadTimeout:
+        print("Merge PR timeout.")
+        try:
+            print("Retry fetching PR.")
+            pr = fetch_github_issue_and_pr()
+            merge_docs_pull_request(pr)
+        except IndexError:
+            print("PR already merged.")
+            pass
+
 
 
 def main():
