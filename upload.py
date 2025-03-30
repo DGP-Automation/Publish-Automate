@@ -35,6 +35,7 @@ s3_client = boto3.client(
 bucket_name = "hutao-distribute"
 print("Uploading to hutao-dist R2 bucket...", flush=True)
 s3_client.upload_file(filename, bucket_name, filename, Callback=ProgressPercentage(filename))
+print()
 print("Uploading to hutao-dist R2 bucket done", flush=True)
 
 minio_s3_client = boto3.client(
@@ -47,4 +48,5 @@ minio_s3_client = boto3.client(
 minio_bucket_name = "hutao"
 print("Uploading to hutao-dist MinIO bucket...", flush=True)
 minio_s3_client.upload_file(filename, minio_bucket_name, filename, Callback=ProgressPercentage(filename))
+print()
 print("Uploading to hutao-dist MinIO bucket done", flush=True)
