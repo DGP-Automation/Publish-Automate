@@ -15,7 +15,7 @@ s3_client = boto3.client(
     config=config
 )
 bucket_name = "hutao-distribute"
-print("Uploading to hutao-dist R2 bucket...")
+print("Uploading to hutao-dist R2 bucket...", flush=True)
 s3_client.upload_file(filename, bucket_name, filename)
 
 minio_s3_client = boto3.client(
@@ -26,5 +26,5 @@ minio_s3_client = boto3.client(
     config=config
 )
 minio_bucket_name = "hutao"
-print("Uploading to hutao-dist MinIO bucket...")
+print("Uploading to hutao-dist MinIO bucket...", flush=True)
 minio_s3_client.upload_file(filename, minio_bucket_name, filename)
