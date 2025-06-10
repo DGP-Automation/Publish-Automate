@@ -33,15 +33,13 @@ jobs:
           wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}
 
       - name: Upload msix to object stores
+        uses: hutao-cdn/upload@v1
+        with:
+          file_path: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          key: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          post_action: preheat
         env:
-          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
-          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
-          MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
-          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
-        run: |
-          python ${{ github.workspace }}/upload.py Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          SNAP_HUTAO_CDN_TOKEN: ${{ secrets.SNAP_HUTAO_CDN_TOKEN }}
 
       - name: Generate SHA256 Checksums
         run: sha256sum *.msix | awk '{print $1}' > SHA256SUMS
