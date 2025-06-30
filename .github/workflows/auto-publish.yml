@@ -32,15 +32,6 @@ jobs:
         run: |
           wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}
 
-      - name: Upload msix to object stores
-        uses: hutao-cdn/upload@v1
-        with:
-          file_path: Snap.Hutao.${{ github.event.client_payload.version }}.msix
-          key: Snap.Hutao.${{ github.event.client_payload.version }}.msix
-          post_action: preheat
-        env:
-          SNAP_HUTAO_CDN_TOKEN: ${{ secrets.SNAP_HUTAO_CDN_TOKEN }}
-
       - name: Generate SHA256 Checksums
         run: sha256sum *.msix | awk '{print $1}' > SHA256SUMS
 
@@ -49,6 +40,15 @@ jobs:
           VERSION: ${{ github.event.client_payload.version }}
         run: |
           python ${{ github.workspace }}/main.py
+
+      - name: Upload msix to object stores
+        uses: hutao-cdn/upload@v1
+        with:
+          file_path: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          key: Snap.Hutao.${{ github.event.client_payload.version }}.msix
+          post_action: preheat
+        env:
+          SNAP_HUTAO_CDN_TOKEN: ${{ secrets.SNAP_HUTAO_CDN_TOKEN }}
 
       - name: Create Github release
         id: github_release
