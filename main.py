@@ -1,10 +1,9 @@
 import json
-
-import httpcore
-import httpx
 import os
 
-PAT_TOKEN = os.getenv("PAT_TOKEN")
+import httpx
+
+from utils import fetch_github_issue_and_pr
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/DGP-Studio/Snap.Hutao/releases/latest"
 
@@ -12,34 +11,6 @@ new_version = os.getenv("VERSION")
 
 github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
 msix_file_name = f"Snap.Hutao.{new_version}.msix"
-
-
-def fetch_github_issue_and_pr() -> dict:
-    pr_url = "https://api.github.com/repos/DGP-Studio/Snap.Hutao.Docs/pulls?state=open"
-    issue_url = "https://api.github.com/repos/DGP-Studio/Snap.Hutao/issues?state=open&labels=Publish"
-
-    def check_label(item):
-        labels = item["labels"]
-        return len(list(filter(lambda label: label["name"] == "Document Updates", labels))) != 0
-
-    prs = list(filter(check_label, httpx.get(pr_url).json()))
-    issues = httpx.get(issue_url).json()
-
-    if len(issues) == 0:
-        print("No open issue with 'Publish' label at main repo.")
-        raise IndexError
-    elif len(issues) != 1:
-        print("Too many open issue with 'Publish' label at main repo.")
-        raise IndexError
-
-    if len(prs) == 0:
-        print("No open PR with 'Document Updates' label.")
-        raise IndexError
-    elif len(prs) != 1:
-        print("Expected exactly one open PR with 'Document Updates' label.")
-        raise IndexError
-
-    return prs[0]
 
 
 def get_update_logs(pr) -> (str, str):
@@ -110,35 +81,10 @@ Direct Download: https://github.com/DGP-Studio/Snap.Hutao/releases/download/{new
     }
 
 
-def merge_docs_pull_request(pr):
-    pr_number = pr["number"]
-    pr_url = f"https://api.github.com/repos/DGP-Studio/Snap.Hutao.Docs/pulls/{pr_number}/merge"
-    merge_headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {PAT_TOKEN}",
-        "X-GitHub-Api-Version": "2022-11-28"
-    }
-    try:
-        response = httpx.put(pr_url, headers=merge_headers)
-        print(response.status_code)
-        print(response.text)
-    except httpcore.ReadTimeout:
-        print("Merge PR timeout.")
-        try:
-            print("Retry fetching PR.")
-            pr = fetch_github_issue_and_pr()
-            merge_docs_pull_request(pr)
-        except IndexError:
-            print("PR already merged.")
-            pass
-
-
-
 def main():
     pr = fetch_github_issue_and_pr()
     en_log, zh_log = get_update_logs(pr)
     changelog_set = generate_changelog(en_log, zh_log)
-    merge_docs_pull_request(pr)
     with open("release_body.md", "w") as body:
         body.writelines(changelog_set['generic'])
 

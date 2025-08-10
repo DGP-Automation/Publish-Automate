@@ -50,6 +50,10 @@ jobs:
         env:
           SNAP_HUTAO_CDN_TOKEN: ${{ secrets.SNAP_HUTAO_CDN_TOKEN }}
 
+      - name: Post Generate update logs
+        run: |
+          python ${{ github.workspace }}/post.py
+
       - name: Create Github release
         id: github_release
         uses: softprops/action-gh-release@v2
