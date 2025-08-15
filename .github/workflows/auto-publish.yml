@@ -32,9 +32,6 @@ jobs:
         run: |
           wget --header="Authorization: Bearer ${{ secrets.SIGNPATH_TOKEN }}" -O Snap.Hutao.${{ github.event.client_payload.version }}.msix ${{ github.event.client_payload.download_link }}
 
-      - name: Generate SHA256 Checksums
-        run: sha256sum *.msix | awk '{print $1}' > SHA256SUMS
-
       - name: Generate update logs
         env:
           VERSION: ${{ github.event.client_payload.version }}
@@ -66,4 +63,3 @@ jobs:
           repository: DGP-Studio/Snap.Hutao
           files: |
             Snap.Hutao.${{ github.event.client_payload.version }}.msix
-            SHA256SUMS
