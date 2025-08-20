@@ -13,7 +13,7 @@ github_version = httpx.get(GITHUB_LATEST_RELEASE_API).json()["tag_name"]
 msix_file_name = f"Snap.Hutao.{new_version}.msix"
 
 
-def get_update_logs(pr) -> (str, str):
+def get_update_logs(pr) -> tuple[str, str]:
     pr_title = pr["title"]
     ref_name = pr["head"]["ref"]
     if new_version not in pr_title:
@@ -40,23 +40,44 @@ def get_update_logs(pr) -> (str, str):
 
 
 def generate_changelog(en_log: str, zh_log: str):
-    generic_changelog = f"""## 更新日志
+    generic_changelog = f"""## 📘 更新日志
     
 {zh_log}
     
-## Update Log
+## 📙 Update Log
     
 {en_log}
     
-## 完整更新日志/What's Changed
-    
-Full Changelog: [{github_version}...{new_version}](https://github.com/DGP-Studio/Snap.Hutao/compare/{github_version}.\
+## 📚 完整更新日志 Full Changelog
+
+<details>
+<summary><b>点击展开 Click to Expand</b></summary>
+
+[From {github_version} to {new_version}](https://github.com/DGP-Studio/Snap.Hutao/compare/{github_version}.\
 ..{new_version})
 
----
-如果你安装过程中出现问题，请阅读我们的 [FAQ 文档](https://hut.ao/zh/advanced/FAQ.html)以获取解决方案
-If you have any issue during the installation, please check our [FAQ document](https://hut.ao/en/advanced/FAQ.html) for solutions
+</details>
+
+## 镜像下载 Mirror Download
+
+> 除了 GitHub 外，您还可以通过以下镜像下载 Snap Hutao 的最新版本
+> In addition to GitHub, you can also download the latest version of Snap Hutao from the following mirrors
+
+<a href="https://pan.quark.cn/s/d73ceb415ad9" style="text-decoration: none;" target="_blank">
+  <img src="https://github.com/user-attachments/assets/b4755b8b-3cc4-441f-865b-2178faeb8398" width="16" height="16" />
+  <span>  夸克网盘 Quark Drive</span>
+</a>
+
+<br>
+
+<a href="https://pan.baidu.com/s/1lpjoFinWNvKQfdct1Hb5ig?pwd=s687" style="text-decoration: none; margin-left: 20px;" target="_blank">
+  <img src="https://github.com/user-attachments/assets/9476056e-ccb6-4678-ab14-27621da2f278" width="16" height="16" />
+  <span>  百度网盘 Baidu Drive</span>
+</a>
+
 """
+
+
     generic_changelog = generic_changelog.replace("\n\n\n", "\n")
     generic_changelog = generic_changelog.replace("\n\n", "\n")
     social_promotion = f"""
