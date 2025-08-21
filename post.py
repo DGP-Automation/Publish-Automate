@@ -1,8 +1,6 @@
 import os
-
 import httpcore
 import httpx
-
 from utils import fetch_github_issue_and_pr
 
 PAT_TOKEN = os.getenv("PAT_TOKEN")
