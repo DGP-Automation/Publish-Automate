@@ -50,23 +50,30 @@ def generate_changelog(en_log: str, zh_log: str):
     
 ## 📚 完整更新日志 Full Changelog
 
+
 <details>
 <summary><b>点击展开 Click to Expand</b></summary>
+
 
 [From {github_version} to {new_version}](https://github.com/DGP-Studio/Snap.Hutao/compare/{github_version}.\
 ..{new_version})
 
+
 </details>
+
 
 ## 镜像下载 Mirror Download
 
+
 > 除了 GitHub 外，您还可以通过以下镜像下载 Snap Hutao 的最新版本
 > In addition to GitHub, you can also download the latest version of Snap Hutao from the following mirrors
+
 
 <a href="https://pan.quark.cn/s/d73ceb415ad9" style="text-decoration: none;" target="_blank">
   <img src="https://github.com/user-attachments/assets/b4755b8b-3cc4-441f-865b-2178faeb8398" width="16" height="16" />
   <span>  夸克网盘 Quark Drive</span>
 </a>
+
 
 <br>
 
@@ -74,6 +81,7 @@ def generate_changelog(en_log: str, zh_log: str):
   <img src="https://github.com/user-attachments/assets/9476056e-ccb6-4678-ab14-27621da2f278" width="16" height="16" />
   <span>  百度网盘 Baidu Drive</span>
 </a>
+
 
 """
 
