@@ -74,14 +74,7 @@ def generate_changelog(en_log: str, zh_log: str):
   <span>  夸克网盘 Quark Drive</span>
 </a>
 
-
 <br>
-
-<a href="https://pan.baidu.com/s/1lpjoFinWNvKQfdct1Hb5ig?pwd=s687" style="text-decoration: none; margin-left: 20px;" target="_blank">
-  <img src="https://github.com/user-attachments/assets/9476056e-ccb6-4678-ab14-27621da2f278" width="16" height="16" />
-  <span>  百度网盘 Baidu Drive</span>
-</a>
-
 
 """
 
